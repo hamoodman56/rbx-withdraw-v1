@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: roblox-proxy-payout-bot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: BOT_COOKIE
+        sync: false
+      - key: PROXY_IP
+        sync: false
+      - key: PROXY_PORT
+        sync: false
+      - key: PROXY_USER
+        sync: false
+      - key: PROXY_PASS
+        sync: false
