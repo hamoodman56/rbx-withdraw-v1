@@ -16,10 +16,13 @@ proxies = {
     "https": f"http://{PROXY_USER}:{PROXY_PASS}@{PROXY_IP}:{PROXY_PORT}",
 }
 
-MOBILE_HEADERS = {
-    "User-Agent": "Roblox/Android/app 2.628.375 (Global)",
-    "Roblox-Browser-Asset-Request": "false",
-    "Accept": "application/json",
+# Standard Desktop Chrome Browser Headers
+DESKTOP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://www.roblox.com/",
+    "Origin": "https://www.roblox.com",
     "Content-Type": "application/json",
     "Cookie": f".ROBLOSECURITY={BOT_COOKIE}",
 }
@@ -37,10 +40,10 @@ def handle_purchase():
 
     target_price = int(amount)
 
-    # 1. Fetch CSRF Token via Webshare Residential Proxy
+    # 1. Fetch CSRF Token via Webshare Proxy using Desktop Headers
     csrf_res = requests.post(
         "https://auth.roblox.com/v2/logout",
-        headers=MOBILE_HEADERS,
+        headers=DESKTOP_HEADERS,
         proxies=proxies,
         timeout=15,
     )
@@ -55,7 +58,7 @@ def handle_purchase():
           401,
       )
 
-    auth_headers = {**MOBILE_HEADERS, "X-CSRF-TOKEN": csrf_token}
+    auth_headers = {**DESKTOP_HEADERS, "X-CSRF-TOKEN": csrf_token}
 
     # 2. Scan Gamepasses
     scan_url = (
@@ -96,7 +99,7 @@ def handle_purchase():
 
     gamepass_id = target_pass.get("id") or target_pass.get("gamePassId")
 
-    # 3. Execute Purchase via Residential Proxy
+    # 3. Execute Purchase via Webshare Proxy using Desktop Headers
     purchase_url = f"https://apis.roblox.com/game-passes/v1/game-passes/{gamepass_id}/purchase"
     purchase_res = requests.post(
         purchase_url,
@@ -112,7 +115,7 @@ def handle_purchase():
       return (
           jsonify({
               "success": False,
-              "error": "Roblox rejected the residential transaction.",
+              "error": "Roblox rejected the desktop transaction.",
               "status": purchase_res.status_code,
               "details": purchase_data,
           }),
@@ -122,7 +125,9 @@ def handle_purchase():
     return (
         jsonify({
             "success": True,
-            "message": "Gamepass purchased via Webshare residential proxy!",
+            "message": (
+                "Gamepass purchased via Webshare proxy with desktop headers!"
+            ),
             "data": purchase_data,
         }),
         200,
